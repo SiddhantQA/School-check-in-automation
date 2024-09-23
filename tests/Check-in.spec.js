@@ -79,7 +79,7 @@ test ('Manual check-in from check-in dashboard ', async function({browser})
 });
 
 
-test ('Manual check-in from student profile', async function({ browser }) {
+test  ('Manual check-in from student profile', async function({ browser }) {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAndNavigate(page);
@@ -151,96 +151,70 @@ test('Checking-in already checked-in', async function({ browser }) {
 });
 
 
-// test.only('Check-in mode', async function({ browser }) {
-//     const context = await browser.newContext();
-//     const page = await context.newPage();
-//     await loginAndNavigate(page);
-
-//     await page.locator('li').first().click();
-//     await page.locator('.sidebar_icon').nth(2).click();
-
-//     await page.waitForSelector('//*[@id="root"]/div/div/div/div[2]/div[2]/div[2]/div/div/div[2]/div/table/tbody/tr/td[3]/div');
-//     let cardIds = await page.locator('//*[@id="root"]/div/div/div/div[2]/div[2]/div[2]/div/div/div[2]/div/table/tbody/tr/td[3]/div').allTextContents();
-//     const cardIdIndex = 0;
-//     let cardIdToSelect = '';
-//     if (cardIds.length > cardIdIndex) {
-//         // Get the text content from the locator
-//         cardIdToSelect = await page.locator('//*[@id="root"]/div/div/div/div[2]/div[2]/div[2]/div/div/div[2]/div/table/tbody/tr/td[3]/div').nth(cardIdIndex).textContent();
-        
-//     } 
-//     await page.locator('li').first().click();
-//     await page.getByText('Check In').click();
-//     await page.locator('[value*="Check-In Mode"]').click();
-//     await expect(page.locator('#responsive-dialog-title')).toHaveText('Enable Check-In Mode');
-//     console.log(await page.locator('xpath=/html/body/div[2]/div[3]/div/div[1]/p/p[2]').textContent());
-//     await page.getByRole('button', { name: 'Yes' }).click();
-
-
-//     await page.locator('#input').fill(cardIdToSelect);
-//     const alertMessage = await page.locator('[role*="alert"]').textContent();
-//     console.log(`Selected cardId: ${cardIds[cardIdIndex]}`);
-//     console.log(alertMessage);
-// });
-
-
-
-test.only('Check-in mode', async function({ browser }) {
+test ('Enable/Disable Check-in mode toggle button ', async function({ browser }) {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAndNavigate(page);
 
-    await page.locator('li').first().click();
-    await page.locator('.sidebar_icon').nth(2).click();
+    expect(page.locator('[value*="Check-In Mode"]')).not.toBeChecked()    
+    await page.locator('[value*="Check-In Mode"]').click();
+    await page.waitForSelector('#responsive-dialog-title');
+    await expect(page.locator('#responsive-dialog-title')).toHaveText('Enable Check-In Mode');
+    // console.log(await page.locator('xpath=/html/body/div[2]/div[3]/div/div[1]/p/p[2]').textContent());
+    await page.getByRole('button', { name: 'Yes' }).click();
+    await expect(page.locator('[value*="Check-In Mode"]')).toBeChecked();
+    await page.waitForSelector('[value*="Check-In Mode"]');
 
-    await page.waitForSelector('//*[@id="root"]/div/div/div/div[2]/div[2]/div[2]/div/div/div[2]/div/table/tbody/tr/td[3]/div');
-    let cardIds = await page.locator('//*[@id="root"]/div/div/div/div[2]/div[2]/div[2]/div/div/div[2]/div/table/tbody/tr/td[3]/div').allTextContents();
+    await page.locator('[value*="Check-In Mode"]').click();
+    await expect(page.locator('[value*="Check-In Mode"]')).not.toBeChecked();
 
-    let cardIdIndex = 0;
-    let checkInSuccess = false;
-
-    while (!checkInSuccess && cardIdIndex < cardIds.length) {
-        let cardIdToSelect = cardIds[cardIdIndex]; // Get the card ID from the array
-
-        if (cardIdToSelect) {
-            await page.locator('li').first().click();
-
-            // More specific selector using getByRole for the button
-            await page.getByText('Check In' ).click(); 
-
-            await page.locator('[value*="Check-In Mode"]').click();
-            await expect(page.locator('#responsive-dialog-title')).toHaveText('Enable Check-In Mode');
-            console.log(await page.locator('xpath=/html/body/div[2]/div[3]/div/div[1]/p/p[2]').textContent());
-            await page.getByRole('button', { name: 'Yes' }).click();
-
-            // Ensure the input is visible and available before interacting with it
-            const inputLocator = page.locator('#input');
-            await inputLocator.waitFor({ state: 'visible' });
-
-            // Attempt to fill the card ID and check-in
-            await inputLocator.fill(cardIdToSelect.trim());
-            const alertMessage = await page.locator('[role*="alert"]').textContent();
-
-            console.log(`Selected cardId: ${cardIdToSelect}`);
-            console.log(alertMessage);
-
-            if (alertMessage.includes('Student already checked in')) {
-                // Increment index to try the next student
-                cardIdIndex++;
-            } else {
-                // If check-in is successful, break the loop
-                checkInSuccess = true;
-            }
-        } else {
-            console.log('Card ID is undefined or null. Skipping to the next index.');
-            cardIdIndex++;
-        }
-    }
-
-    if (!checkInSuccess) {
-        console.log('No students were successfully checked in.');
-    } else {
-        console.log('Check-in successful.');
-    }
 });
+
+test ('Send Notification', async function({ browser }) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await loginAndNavigate(page);
+    await page.getByRole('button', { name: 'Send Notification' }).click();
+    await page.getByRole('button', { name: 'Send Notification' }).click();
+    const alertMessage = await page.locator('[role*="alert"]').textContent();
+    console.log(alertMessage);
+    
+});
+
+test ('Checking-in inactive student', async function({ browser }) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await loginAndNavigate(page);
+    await page.getByRole('button', { name: 'open Students' }).click();    
+    await page.locator('[data-testid*="ArrowDropDownIcon"]').click();
+    await page.waitForSelector('.name_container');
+    await page.locator('.name_container').first().click();
+    await page.getByRole('button', { name: 'Check-In' }).click();  
+    await page.getByRole('button', { name: 'Check-In' }).click();  
+    const alertMessage = await page.locator('[role*="alert"]').textContent();
+    console.log(alertMessage);
+});
+
+test.only('Add Student', async function({ browser }) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await loginAndNavigate(page);
+    await page.getByRole('button', { name: 'open Students' }).click();  
+    await page.getByRole('button', { name: 'Add Student' }).click();
+
+    //Primary details of students 
+    await page.locator('[name*="primaryDetails.firstName"]').fill("Tester at");
+    await page.locator('[name*="primaryDetails.lastName"]').fill("Gytworkz");
+    await page.locator('[name*="primaryDetails.contact"]').fill(" ");
+    await page.locator('[name*="primaryDetails.contact"]').fill("+91 7020785937");
+    await page.locator('[name*="primaryDetails.email"]').fill("testeratGytworkz@gytworkz.com");
+    await page.locator('[name*="primaryDetails.grade"]').fill("1");
+    await page.locator('[name*="primaryDetails.cardId"]').fill("123456789000");
+    // await page.locator('').fill("");
+
+});
+
+
+
 
 
