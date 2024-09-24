@@ -26,7 +26,7 @@ module.exports = defineConfig({
     trace: 'on',
     screenshot : 'on',
     browserName : 'chromium',
-    headless : false,
+    headless : true,
   },
 
 });
