@@ -197,12 +197,12 @@ test ('Checking-in inactive student', async function({ browser }) {
 
 
 const fs = require('fs');
-const testData = JSON.parse(fs.readFileSync('C:/Users/SiddhantKamatShankhw/Desktop/School-check-in-automation/TestData/CreateStudentData.json'));
+const testData = JSON.parse(fs.readFileSync('TestData/CreateStudentData.json'));
     
 test.describe('Login Test', () => {
     testData.forEach((data) => {
       
-        test (`Add Student: ${data.username}`, async function({ browser }) {
+        test.only (`Add Student: ${data.username}`, async function({ browser }) {
             const context = await browser.newContext();
             const page = await context.newPage();
             await loginAndNavigate(page);
@@ -229,14 +229,14 @@ test.describe('Login Test', () => {
   });
 
 
-  test.only ('Bulk Upload', async function({ browser }) {
+  test ('Bulk Upload', async function({ browser }) {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAndNavigate(page);
     await page.getByRole('button', { name: 'open Students' }).click();  
     await page.getByRole('button', { name: 'Bulk Upload' }).click();
     // await page.getByRole('button', { name: ' Upload' }).click();
-    await page.getByRole('button', { name: ' Upload' }).setInputFiles('C:/Users/SiddhantKamatShankhw/Desktop/School-check-in-automation/TestData/Bulk Upload Test File.xlsx')
+    await page.getByRole('button', { name: ' Upload' }).setInputFiles('TestData/Bulk Upload Test File.xlsx')
     await page.getByRole('button', { name: ' Create' }).click();
     await page.waitForTimeout(2000);
     console.log (await page.locator('.dialog_container').allTextContents());
