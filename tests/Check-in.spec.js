@@ -53,7 +53,7 @@ test ('Manual check-in from check-in dashboard ', async function({browser})
     expect (await page.locator('[role="dialog"]').isVisible());
     expect (page.locator('[class="flex v-center"]')).toHaveText("Manual Check-In");
 
-    await page.locator('[placeholder="Student Name "]').fill('j');
+    await page.locator('[placeholder="Student Name or Card ID"]').fill('j');
     await page.waitForSelector('xpath=/html/body/div[2]/div[3]/div/div[1]/div/div[1]/div/div[2]');
     let studentSuggestion = await page.locator('xpath=/html/body/div[2]/div[3]/div/div[1]/div/div[1]/div/div[2]').allTextContents();
    
@@ -63,13 +63,13 @@ test ('Manual check-in from check-in dashboard ', async function({browser})
         const studentToSelect = page.locator('xpath=/html/body/div[2]/div[3]/div/div[1]/div/div[1]/div/div[2]').nth(studentIndex);
 
         await studentToSelect.click();
-        console.log(`Selected student: ${studentSuggestion[studentIndex]}`);
+        console.log(`Selected student: ${studentSuggestion [ studentIndex]}`);
 
         await page.locator('[placeholder*="hh:mm (a|p)m"]').fill("05:30 am");
         await page.getByRole('button', { name: 'Check-In' }).click();
         const alertMessage = await page.locator('[role*="alert"]').textContent();
         console.log(alertMessage);
-        console.log(`Checked in student: ${studentSuggestion[studentIndex]}`);
+        console.log(`Checked in student: ${studentSuggestion [ studentIndex]}`);
     } 
     else
     {
@@ -195,24 +195,55 @@ test ('Checking-in inactive student', async function({ browser }) {
     console.log(alertMessage);
 });
 
-test.only('Add Student', async function({ browser }) {
+
+const fs = require('fs');
+const testData = JSON.parse(fs.readFileSync('C:/Users/SiddhantKamatShankhw/Desktop/School-check-in-automation/TestData/CreateStudentData.json'));
+    
+test.describe('Login Test', () => {
+    testData.forEach((data) => {
+      
+        test (`Add Student: ${data.username}`, async function({ browser }) {
+            const context = await browser.newContext();
+            const page = await context.newPage();
+            await loginAndNavigate(page);
+            await page.getByRole('button', { name: 'open Students' }).click();  
+            await page.getByRole('button', { name: 'Add Student' }).click();
+
+            // Primary details of student 
+            await page.locator ('[name*="primaryDetails.firstName"]').fill(data.firstName);
+            await page.locator ('[name*="primaryDetails.lastName"]').fill(data.lastName);
+            await page.locator('[name*="primaryDetails.contact"]').fill(" ");
+            await page.locator('[name*="primaryDetails.contact"]').fill(data.Contact);
+            await page.locator('[name*="primaryDetails.email"]').fill(data.Email);
+            await page.locator('[name*="primaryDetails.grade"]').fill(data.Grade);
+            await page.locator('[name*="primaryDetails.cardId"]').fill(data.CardId);
+            await page.locator('[name*="primaryContact.name"]').fill(data.PCName);
+            await page.locator('[name*="primaryContact.phone"]').fill(" ");
+            await page.locator('[name*="primaryContact.phone"]').fill(data.Pcontact);
+            await page.getByRole('button', { name: 'Create' }).click();
+            const alertMessage = await page.locator('[role*="alert"]').textContent();
+            console.log(alertMessage);
+  
+      });
+    });
+  });
+
+
+  test.only ('Bulk Upload', async function({ browser }) {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAndNavigate(page);
     await page.getByRole('button', { name: 'open Students' }).click();  
-    await page.getByRole('button', { name: 'Add Student' }).click();
-
-    //Primary details of students 
-    await page.locator('[name*="primaryDetails.firstName"]').fill("Tester at");
-    await page.locator('[name*="primaryDetails.lastName"]').fill("Gytworkz");
-    await page.locator('[name*="primaryDetails.contact"]').fill(" ");
-    await page.locator('[name*="primaryDetails.contact"]').fill("+91 7020785937");
-    await page.locator('[name*="primaryDetails.email"]').fill("testeratGytworkz@gytworkz.com");
-    await page.locator('[name*="primaryDetails.grade"]').fill("1");
-    await page.locator('[name*="primaryDetails.cardId"]').fill("123456789000");
-    // await page.locator('').fill("");
-
+    await page.getByRole('button', { name: 'Bulk Upload' }).click();
+    // await page.getByRole('button', { name: ' Upload' }).click();
+    await page.getByRole('button', { name: ' Upload' }).setInputFiles('C:/Users/SiddhantKamatShankhw/Desktop/School-check-in-automation/TestData/Bulk Upload Test File.xlsx')
+    await page.getByRole('button', { name: ' Create' }).click();
+    await page.waitForTimeout(2000);
+    console.log (await page.locator('.dialog_container').allTextContents());
+    const alertMessage = await page.locator('[role*="alert"]').textContent();
+    console.log(alertMessage);
 });
+
 
 
 
