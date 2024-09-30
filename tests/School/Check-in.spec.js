@@ -1,8 +1,8 @@
-const { test, expect } = require("@playwright/test"); //importing annotation from jars
+const { test, expect, firefox } = require("@playwright/test"); //importing annotation from jars
 const { Console } = require("console");
 const { loginAndNavigate } = require('./loginHelper');
 const exp = require("constants");
-
+const fs = require('fs');
 
 test ('check-in dashboard', async function({browser})
 {
@@ -36,9 +36,6 @@ test ('check-in dashboard', async function({browser})
 
     await expect (page.locator("[placeholder='  Search']")).toBeEditable();
     await expect (page.locator("[placeholder='  Search']")).toBeVisible();
-
-
-    
 
 });
 
@@ -78,8 +75,7 @@ test ('Manual check-in from check-in dashboard ', async function({browser})
 
 });
 
-
-test  ('Manual check-in from student profile', async function({ browser }) {
+test ('Manual check-in from student profile', async function({ browser }) {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAndNavigate(page);
@@ -111,8 +107,7 @@ test  ('Manual check-in from student profile', async function({ browser }) {
     }
 });
 
-
-test('Checking-in already checked-in', async function({ browser }) {
+test ('Checking-in already checked-in', async function({ browser }) {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAndNavigate(page);
@@ -147,11 +142,9 @@ test('Checking-in already checked-in', async function({ browser }) {
         console.log('No student available to select at the given index.');
     }   
  
-
 });
 
-
-test ('Enable/Disable Check-in mode toggle button ', async function({ browser }) {
+test ('Working of Check-in mode toggle button', async function({ browser }) {
     const context = await browser.newContext();
     const page = await context.newPage();
     await loginAndNavigate(page);
@@ -181,71 +174,30 @@ test ('Send Notification', async function({ browser }) {
     
 });
 
-test ('Checking-in inactive student', async function({ browser }) {
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    await loginAndNavigate(page);
-    await page.getByRole('button', { name: 'open Students' }).click();    
-    await page.locator('[data-testid*="ArrowDropDownIcon"]').click();
-    await page.waitForSelector('.name_container');
-    await page.locator('.name_container').first().click();
-    await page.getByRole('button', { name: 'Check-In' }).click();  
-    await page.getByRole('button', { name: 'Check-In' }).click();  
-    const alertMessage = await page.locator('[role*="alert"]').textContent();
-    console.log(alertMessage);
-});
-
-
-const fs = require('fs');
-const testData = JSON.parse(fs.readFileSync('TestData/CreateStudentData.json'));
-    
-test.describe('Login Test', () => {
-    testData.forEach((data) => {
+const testData3 = JSON.parse(fs.readFileSync('TestData/CardIDs.json'));
+test.describe('add student with valid data', () => {
+  testData3.forEach((data) => {
       
-        test.only (`Add Student: ${data.username}`, async function({ browser }) {
+        test (`Check-in student by card id : ${data.Name}`, async function({ browser }) {
             const context = await browser.newContext();
             const page = await context.newPage();
             await loginAndNavigate(page);
-            await page.getByRole('button', { name: 'open Students' }).click();  
-            await page.getByRole('button', { name: 'Add Student' }).click();
-
-            // Primary details of student 
-            await page.locator ('[name*="primaryDetails.firstName"]').fill(data.firstName);
-            await page.locator ('[name*="primaryDetails.lastName"]').fill(data.lastName);
-            await page.locator('[name*="primaryDetails.contact"]').fill(" ");
-            await page.locator('[name*="primaryDetails.contact"]').fill(data.Contact);
-            await page.locator('[name*="primaryDetails.email"]').fill(data.Email);
-            await page.locator('[name*="primaryDetails.grade"]').fill(data.Grade);
-            await page.locator('[name*="primaryDetails.cardId"]').fill(data.CardId);
-            await page.locator('[name*="primaryContact.name"]').fill(data.PCName);
-            await page.locator('[name*="primaryContact.phone"]').fill(" ");
-            await page.locator('[name*="primaryContact.phone"]').fill(data.Pcontact);
-            await page.getByRole('button', { name: 'Create' }).click();
-            const alertMessage = await page.locator('[role*="alert"]').textContent();
-            console.log(alertMessage);
-  
+            await page.getByRole('button', { name: 'Manually Check In' }).click();
+    
+            expect (await page.locator('[role="dialog"]').isVisible());
+            await expect (page.locator('[class="flex v-center"]')).toHaveText("Manual Check-In");
+            await page.waitForSelector('[placeholder="Student Name or Card ID"]');
+            await page.locator('[placeholder="Student Name or Card ID"]').pressSequentially(data.Id);
+            await page.waitForSelector('.list_dropdown_container div');
+            const studentName = await page.locator('.list_dropdown_container div').first().textContent();
+            const cardID = await page.locator('.list_dropdown_container div').last().textContent();
+            // await page.waitForTimeout(1000);
+            if(studentName == data.Name && cardID == data.Id){
+                await page.locator('.list_dropdown_container').click();
+            }
+            else{
+                console.log ('Cannot find the student');
+            }          
       });
     });
   });
-
-
-  test ('Bulk Upload', async function({ browser }) {
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    await loginAndNavigate(page);
-    await page.getByRole('button', { name: 'open Students' }).click();  
-    await page.getByRole('button', { name: 'Bulk Upload' }).click();
-    // await page.getByRole('button', { name: ' Upload' }).click();
-    await page.getByRole('button', { name: ' Upload' }).setInputFiles('TestData/Bulk Upload Test File.xlsx')
-    await page.getByRole('button', { name: ' Create' }).click();
-    await page.waitForTimeout(2000);
-    console.log (await page.locator('.dialog_container').allTextContents());
-    const alertMessage = await page.locator('[role*="alert"]').textContent();
-    console.log(alertMessage);
-});
-
-
-
-
-
-
